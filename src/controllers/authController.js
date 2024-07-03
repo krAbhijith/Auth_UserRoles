@@ -2,7 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const USER_ROLES = require('../userRoles/roles');
-const canCreateUser = require('../middleware/createUserMiddleware');
+const createUpdateUser = require('../middleware/createUpdateUserMiddleware');
 
 exports.createUser = async (req, res) => {
   try {
@@ -12,7 +12,7 @@ exports.createUser = async (req, res) => {
       return res.status(400).send({error: "invalid user role"});
     }
 
-    if (!canCreateUser(req.user.role, user.role)) {
+    if (!createUpdateUser(req.user.role, user.role)) {
       return res.status(401).send({error: `You dont have permission for creating ${user.role}`});
     }
 

@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { default: mongoose } = require('mongoose');
+const createUpdateUser = require('../middleware/createUpdateUserMiddleware');
+const USER_ROLES = require('../userRoles/roles');
 
 exports.getUser = async (req, res) => {
   try {
@@ -11,9 +11,9 @@ exports.getUser = async (req, res) => {
   }
 };
 
-exports.updateUser = async (req, res) => {
+exports.updateSelf = async (req, res) => {
   const updates =  Object.keys(req.body.user);
-  const allowedUpdates = ['username', 'email', 'password', 'bio', 'image'];
+  const allowedUpdates = req.user.role == USER_ROLES.ADMIN ? ['name', 'email', 'password', 'bio'] : ['password'];
   const isValidUpdate = updates.every(update => allowedUpdates.includes(update));
 
   if (!isValidUpdate){
@@ -34,6 +34,37 @@ exports.updateUser = async (req, res) => {
     res.status(200).send({ user: user })
     
   }catch(err) {
+    res.status(500).send({ error: `internal server error`});
+  }
+};
+
+exports.updateUserByEmail = async (req, res) => {
+  const updates =  Object.keys(req.body.user);
+  const allowedUpdates = req.user.role == USER_ROLES.ADMIN ? ['name', 'email', 'password', 'bio', 'role'] : ['name', 'email', 'password', 'bio'];
+
+  const email = req.params.email;
+  const user = await User.findOne({email: email});
+
+  if (!user){
+    return res.status(404).send({ error: "User not found" });
+  }
+
+  const isValidUpdate = updates.every(update => allowedUpdates.includes(update));
+
+  if (!isValidUpdate || !createUpdateUser(req.user.role, user.role)){
+    return res.status(401).send({ error: "Invalid update" })
+  }
+
+  try{
+    if (req.body.user.password){
+        req.body.user.password = await bcrypt.hash(req.body.user.password, 8);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(user._id, req.body.user, { new: true, runValidators: true });
+
+    res.status(200).send({ user: updatedUser })
+    
+  }catch(error) {
     res.status(500).send({ error: `internal server error`});
   }
 };
