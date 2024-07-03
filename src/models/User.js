@@ -31,7 +31,9 @@ userSchema.methods.toJSON = function(){
 
 userSchema.methods.toProfile = function (user) {
   return {
-    username: this.username,
+    name: this.name,
+    role: this.role,
+    email: this.email,
     bio: this.bio,
     // following: user ? user.followingList.includes(this._id) : false
   };
@@ -39,9 +41,8 @@ userSchema.methods.toProfile = function (user) {
 
 userSchema.pre('save', async function(next) {
   if (this.isModified('password')) {
-    this.password = bcrypt.hash(this.password, 8);
+    this.password = await bcrypt.hash(this.password, 8);
   }
-
   next();
 });
 
