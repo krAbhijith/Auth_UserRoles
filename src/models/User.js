@@ -16,8 +16,7 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.methods.toJSON = function(){
-  const user = this;
-  const userObj = user.toObject();
+  const userObj = this.toObject();
 
   delete userObj.password;
   delete userObj.__v;
@@ -29,15 +28,15 @@ userSchema.methods.toJSON = function(){
   return userObj
 };
 
-userSchema.methods.toProfile = function (user) {
-  return {
-    name: this.name,
-    role: this.role,
-    email: this.email,
-    bio: this.bio,
-    // following: user ? user.followingList.includes(this._id) : false
-  };
-};
+// userSchema.methods.toProfile = function (user) {
+//   return {
+//     name: this.name,
+//     role: this.role,
+//     email: this.email,
+//     bio: this.bio,
+//     following: user ? user.followingList.includes(this._id) : false
+//   };
+// };
 
 userSchema.pre('save', async function(next) {
   if (this.isModified('password')) {
