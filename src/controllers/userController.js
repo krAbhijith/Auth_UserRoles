@@ -3,14 +3,74 @@ const bcrypt = require('bcryptjs');
 const createUpdateUser = require('../middleware/createUpdateUserMiddleware');
 const USER_ROLES = require('../userRoles/roles');
 
+/**
+ * Get the current logged in user's information.
+ *
+ * @function getUser
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @returns {Object} - Returns a JSON object with the user's information if successful, otherwise returns an error message.
+ *
+ * @example
+ * // Request
+ * GET /api/users/me
+ *
+ * // Response
+ * {
+ *   "user": {
+ *     "name": "John Doe",
+ *     "email": "johndoe@example.com",
+ *     // ... other user properties
+ *   }
+ * }
+ *
+ * @example
+ * // Error Response
+ * {
+ *   "error": "User not found"
+ * }
+ */
 exports.getUser = async (req, res) => {
   try {
-    res.status(200).send({ user: req.user});
+    res.status(200).send({ user: req.user });
   } catch (error) {
     res.status(400).send(error);
   }
-};
+};;
 
+/**
+ * Updates the current logged in user's information.
+ *
+ * @function updateSelf
+ * @param {Object} req - The request object containing the user's updates.
+ * @param {Object} res - The response object to send back the updated user or error.
+ * @returns {void}
+ *
+ * @example
+ * // Request
+ * PUT /api/users/me
+ * {
+ *   "user": {
+ *     "name": "John Doe",
+ *     "password": "newpassword123"
+ *   }
+ * }
+ *
+ * // Response
+ * {
+ *   "user": {
+ *     "name": "John Doe",
+ *     "email": "johndoe@example.com",
+ *     // ... other user properties
+ *   }
+ * }
+ *
+ * @example
+ * // Error Response
+ * {
+ *   "error": "Invalid update"
+ * }
+ */
 exports.updateSelf = async (req, res) => {
   try{
     const updates =  Object.keys(req.body.user);
@@ -22,7 +82,6 @@ exports.updateSelf = async (req, res) => {
       return res.status(400).send({ error: "Invalid update" })
     }
 
-  
     if (updations.password){
       updations.password = await bcrypt.hash(updations.password, 8);
     }
@@ -40,12 +99,57 @@ exports.updateSelf = async (req, res) => {
     }
 
     res.status(200).send({ user: user })
-    
+
   }catch(err) {
     res.status(500).send({ error: `internal server error`});
   }
 };
 
+/**
+ * Updates a user's information by their email.
+ *
+ * @function updateUserByEmail
+ * @param {Object} req - The request object containing the user's email and updates.
+ * @param {Object} res - The response object to send back the updated user or error.
+ * @returns {void}
+ *
+ * @example
+ * // Request
+ * PUT /api/users/:email
+ * {
+ *   "user": {
+ *     "name": "John Doe",
+ *     // ... other user properties
+ *   }
+ * }
+ *
+ * // Response
+ * {
+ *   "user": {
+ *     "name": "John Doe",
+ *     "email": "johndoe@example.com",
+ *     // ... other user properties
+ *   }
+ * }
+ *
+ * @example
+ * // Error Response
+ * {
+ *   "error": "User not found"
+ * }
+ *
+ * @example
+ * // Error Response
+ * {
+ *   "error": "Invalid update"
+ * }
+ *
+ * @example
+ * // Error Response
+ * {
+ *   "error": "invalid user role"
+ * }
+ */
 exports.updateUserByEmail = async (req, res) => {
   try{
     const updates =  Object.keys(req.body.user);
@@ -84,6 +188,41 @@ exports.updateUserByEmail = async (req, res) => {
   }
 };
 
+/**
+ * Deletes a user from the database.
+ *
+ * @function deleteUser
+ * @param {Object} req - The request object containing the user's email (optional) and the authenticated user's role.
+ * @param {Object} res - The response object to send back the success message or error.
+ * @returns {void}
+ *
+ * @example
+ * // Request
+ * DELETE /api/users/:email
+ *
+ * // Response
+ * {
+ *   "message": "User deleted successfully"
+ * }
+ *
+ * @example
+ * // Error Response
+ * {
+ *   "error": "User not found"
+ * }
+ *
+ * @example
+ * // Error Response
+ * {
+ *   "error": "You don't have permission to perform this action"
+ * }
+ *
+ * @example
+ * // Error Response
+ * {
+ *   "error": "You are the only admin. You canot perform this action"
+ * }
+ */
 exports.deleteUser = async (req, res) => {
   try {
     const email = req.params.email;
@@ -121,88 +260,5 @@ exports.deleteUser = async (req, res) => {
 //     }catch (error) {
 
 //         res.status(500).send({ error: 'internal server error' });
-//     }
-// };
-
-
-// exports.follow = async (req, res) => {
-//     try {
-//       const usernameToFollow = req.params.username;
-//       const follower = req.user;
-//       const userToFollow = await User.findOne({username: usernameToFollow}); 
-
-//       following= follower.followingList.includes(userToFollow._id )
-
-//       if(!userToFollow){
-//         return res.status(400).send({ error: "User not found" });
-//       }
-
-//       if (follower.username === usernameToFollow){
-//         return res.status(400).send({ error: "You canot follow yourself" });
-//       }
-
-//       profile = {
-//         "username": userToFollow.username,
-//         "bio": userToFollow.bio,
-//         "image": userToFollow.image,
-//         "following": !following,
-//       }
-
-//       if (following){
-//         return res.status(200).send({ error: `You already following ${ userToFollow.username }` }); 
-//       }
-
-//       follower.followingList.push(userToFollow.id);
-//         await follower.save();
-
-//       userToFollow.followersList.push(follower.id);
-//         await userToFollow.save();
-
-//       res.status(200).send({ profile: profile });
-
-//     } catch (error) {
-//         console.log(error);
-//     }
-// };
-
-
-
-// exports.unfollow = async (req, res) => {
-//     try {
-//         const usernameToUnfollow = req.params.username;
-//         const follower = req.user;
-//         const userToUnfollow = await User.findOne({username: usernameToUnfollow}); 
-
-//         following= follower.followingList.includes(userToUnfollow._id )
-
-//         if(!userToUnfollow){
-//             return res.status(400).send({ error: "User not found" });
-//         }
-
-//         if (follower.username === usernameToUnfollow){
-//             return res.status(400).send({ error: "You canot follow yourself" });
-//         }
-          
-//         if (!following){
-//           return res.status(400).send({ error: `you are not following ${userToUnfollow.username} to unfollow` });
-//         }
-
-//         profile = {
-//             "username": userToUnfollow.username,
-//             "bio": userToUnfollow.bio,
-//             "image": userToUnfollow.image,
-//             "following": !following,
-//         }
-
-//         follower.followingList = follower.followingList.filter(id => !id.equals(userToUnfollow._id));
-//         userToUnfollow.followersList = userToUnfollow.followersList.filter(id => !id.equals(follower._id));
-
-//         await follower.save();
-//         await userToUnfollow.save();
-        
-//         res.status(200).send({ profile: profile });
-
-//     } catch (error) {
-//         console.log(error);
 //     }
 // };
