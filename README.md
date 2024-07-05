@@ -1,4 +1,4 @@
-```markdown
+
 # Authentication API Documentation
 
 ## Base URL
@@ -241,4 +241,3 @@ The API supports the following user roles:
 - USER
 
 Different roles have different permissions for creating and updating users.
-```
